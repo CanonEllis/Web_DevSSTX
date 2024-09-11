@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Animation Demos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="demo-box" id="demoBox">Demo</div>
+
+    <!-- Table layout for buttons -->
+    <table style="margin: 20px auto; border-spacing: 15px;">
+        <tr>
+            <td><button onclick="applyEffect('fade-in')">Fade In</button></td>
+            <td><button onclick="applyEffect('slide-in')">Slide In</button></td>
+            <td><button onclick="applyEffect('scale-up')">Scale Up</button></td>
+            <td><button onclick="applyEffect('rotate')">Rotate</button></td>
+            <td><button onclick="applyEffect('bounce')">Bounce</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="applyEffect('pulse')">Pulse</button></td>
+            <td><button onclick="applyEffect('color-change')">Color Change</button></td>
+            <td><button onclick="applyEffect('wiggle')">Wiggle</button></td>
+            <td><button onclick="applyEffect('blink')">Blink</button></td>
+            <td><button onclick="applyEffect('flip')">Flip</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="applyEffect('shake')">Shake</button></td>
+            <td><button onclick="applyEffect('skew')">Skew</button></td>
+            <td><button onclick="applyEffect('expand-contract')">Expand/Contract</button></td>
+            <td><button onclick="applyEffect('swing')">Swing</button></td>
+            <td><button onclick="applyEffect('zoom-in-out')">Zoom In/Out</button></td>
+        </tr>
+        <tr>
+            <td><button onclick="applyEffect('slide-down')">Slide Down</button></td>
+            <td><button onclick="applyEffect('rotate-scale')">Rotate/Scale</button></td>
+            <td><button onclick="applyEffect('flash')">Flash</button></td>
+            <td><button onclick="applyEffect('glow')">Glow</button></td>
+            <td><button onclick="applyEffect('rotate-back-forth')">Rotate Back/Forth</button></td>
+        </tr>
+    </table>
+
+    <script>
+        function applyEffect(effect) {
+            // Get the demo box
+            const demoBox = document.getElementById('demoBox');
+
+            // Remove all active classes
+            demoBox.className = 'demo-box';
+
+            // Add the new effect class
+            setTimeout(() => {
+                demoBox.classList.add(effect, 'active');
+            }, 100); // Add a small delay to reset the animation
+        }
+    </script>
+
+</body>
+</html>
