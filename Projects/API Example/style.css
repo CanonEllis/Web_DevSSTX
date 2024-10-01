@@ -1,0 +1,85 @@
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.pokedex-container {
+  background-color: #dc0a2d;
+  border: 5px solid #333;
+  border-radius: 15px;
+  width: 400px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+}
+
+.pokedex-header {
+  background-color: #333;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.pokedex-header h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+input {
+  padding: 10px;
+  width: 80%;
+  border: 1px solid #333;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #feca1b;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #f8b409;
+}
+
+.pokemon-container {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f8f8f8;
+  color: black;
+  border-radius: 10px;
+  text-align: left;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.pokemon-container img {
+  width: 150px;
+  display: block;
+  margin: 0 auto;
+}
+
+.pokemon-container h3 {
+  text-align: center;
+}
+
+.pokemon-container p {
+  margin: 5px 0;
+}
+
+.error-message {
+  color: #ffcc00;
+  font-weight: bold;
+}
