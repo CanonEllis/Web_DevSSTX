@@ -122,7 +122,7 @@ Now, let’s use JavaScript to fetch driver data from the API and dynamically po
 const driverContainer = document.getElementById('driverContainer');
 
 // API URL to fetch drivers from the 2023 season
-const apiUrl = 'https://openf1.org/api/drivers?year=2023';
+const apiUrl = 'https://api.openf1.org/v1/drivers';
 
 // Function to fetch drivers
 function fetchDrivers() {
