@@ -1,4 +1,4 @@
-// script.js
+// Matrix Background
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 
@@ -7,18 +7,15 @@ canvas.height = window.innerHeight;
 
 const fontSize = 16;
 const columns = canvas.width / fontSize;
-
-// Characters for the Matrix effect
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
 const charArray = characters.split('');
-
 const drops = Array.from({ length: columns }).fill(0);
 
 function drawMatrix() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#00FF00'; // Matrix green
+    ctx.fillStyle = '#00FF00';
     ctx.font = `${fontSize}px monospace`;
 
     drops.forEach((y, index) => {
@@ -34,3 +31,25 @@ function drawMatrix() {
 }
 
 setInterval(drawMatrix, 50);
+
+// Loading Screen Logic
+const loadingScreen = document.getElementById('loading-screen');
+const loadingBar = document.getElementById('loading-bar');
+const loadingText = document.getElementById('loading-text');
+const mainContent = document.getElementById('main-content');
+
+let progress = 0;
+const loadingInterval = setInterval(() => {
+    progress += 1;
+    loadingBar.style.width = `${progress}%`;
+
+    if (progress >= 100) {
+        clearInterval(loadingInterval);
+        loadingText.innerText = "Click to access";
+
+        loadingScreen.addEventListener('click', () => {
+            loadingScreen.style.display = 'none';
+            mainContent.style.display = 'flex';
+        });
+    }
+}, 30);
