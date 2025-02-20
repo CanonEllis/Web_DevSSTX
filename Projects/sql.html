@@ -1,212 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL Query Checker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #121212;
-            color: #ffffff;
-            text-align: center;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 10px;
-            background-color: #1e1e1e;
-            color: #ffffff;
-        }
-        th, td {
-            border: 1px solid #ffffff;
-            padding: 8px;
-            text-align: left;
-        }
-        textarea {
-            width: 100%;
-            height: 80px;
-            margin-top: 10px;
-            background-color: #1e1e1e;
-            color: #ffffff;
-            border: 1px solid #ffffff;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #6200ea;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #3700b3;
-        }
-        .correct { color: #00c853; font-weight: bold; }
-        .incorrect { color: #ff5252; font-weight: bold; }
-        #scoreBoard {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-        #outputTable {
-            margin-top: 20px;
-            width: 100%;
-            border-collapse: collapse;
-        }
-        #outputTable th, #outputTable td {
-            border: 1px solid white;
-            padding: 8px;
-            text-align: left;
-        }
-        #questionDisplay {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 20px 0;
-            color: #ffffff;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Practice</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet">
+  <!-- Ace Editor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <style>
+    :root {
+      --primary-bg: #1f1f1f;
+      --secondary-bg: #292929;
+      --accent: #6200ea;
+      --accent-hover: #7e3ff2;
+      --text-color: #e0e0e0;
+      --error-color: #ff5252;
+      --success-color: #00c853;
+      --card-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #121212 0%, #1f1f1f 100%);
+      margin: 0;
+      padding: 20px;
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background-color: var(--primary-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--card-shadow);
+      max-width: 900px;
+      width: 100%;
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+      font-weight: 500;
+    }
+    .table-container, #outputTable, #tableDisplay table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .table-container table, #outputTable, #tableDisplay table {
+      background-color: var(--secondary-bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #444;
+      text-align: left;
+    }
+    th {
+      background-color: var(--accent);
+      color: #fff;
+    }
+    /* Ace Editor container styling with resizable property */
+    #editor {
+      width: 100%;
+      height: 100px;
+      margin-top: 15px;
+      border-radius: 4px;
+      overflow: auto;
+      resize: vertical;
+    }
+    button {
+      background-color: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+    #feedback {
+      margin-top: 15px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .correct {
+      color: var(--success-color);
+    }
+    .incorrect {
+      color: var(--error-color);
+    }
+    #lastIncorrectQuery {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--error-color);
+    }
+    #questionDisplay {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 20px 0;
+      text-align: center;
+    }
+    #scoreBoard {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h2>SQL Query Checker</h2>
-    <p><strong>Table: students</strong></p>
-    <table>
-        <tr><th>ID</th><th>Name</th><th>Age</th><th>Grade</th></tr>
-        <tr><td>1</td><td>Alice</td><td>20</td><td>A</td></tr>
-        <tr><td>2</td><td>Bob</td><td>21</td><td>B</td></tr>
-        <tr><td>3</td><td>Charlie</td><td>22</td><td>C</td></tr>
-    </table>
+  <div class="container">
+    <h2>SQL Query Checker - Randomized</h2>
+    <p><strong>Randomly Generated Table: students</strong></p>
+    <!-- Display the randomly generated table -->
+    <div id="tableDisplay"></div>
 
+    <!-- Current question display -->
     <p id="questionDisplay"></p>
 
-    <textarea id="queryInput" placeholder="Enter your SQL query here..."></textarea>
+    <!-- Ace Editor container replaces the textarea -->
+    <div id="editor" placeholder="Enter your SQL query here..."></div>
     <button onclick="runQuery()">Run Query</button>
     <p id="feedback"></p>
+    <p id="lastIncorrectQuery"></p>
     <table id="outputTable"></table>
     <p id="scoreBoard">Correct Queries: <span id="correctCount">0</span></p>
+  </div>
 
-    <script>
-        let db;
-        let correctCount = parseInt(localStorage.getItem("correctCount")) || 0;
-        let currentQuestion = parseInt(localStorage.getItem("currentQuestion")) || 1;
+  <script>
+    let db;
+    let correctCount = parseInt(localStorage.getItem("correctCount")) || 0;
+    document.getElementById("correctCount").innerText = correctCount;
 
-        document.getElementById("correctCount").innerText = correctCount;
+    // Global variables for the current query and question text.
+    let currentQuery = "";
+    let currentQuestionText = "";
 
-        let questions = {
-            "1": "Select all students with grade 'A'",
-            "2": "Select students older than 20",
-            "3": "Get student names and grades",
-            "4": "Find the youngest student",
-            "5": "Count the number of students",
-            "6": "Get students ordered by age",
-            "7": "Find students whose name starts with 'A'",
-            "8": "Get distinct grades",
-            "9": "Find students with an age of 21 or more",
-            "10": "Select the highest age",
-            "11": "Find students with grade 'B' or 'C'"
-        };
+    // Data arrays for random generation.
+    const names = ["Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Helen", "Noam", "Victor", "Roman"];
+    const grades = ["H", "V", "G", "P", "X"];
 
-        let correctQueries = {
-            "1": "SELECT * FROM students WHERE grade = 'A';",
-            "2": "SELECT * FROM students WHERE age > 20;",
-            "3": "SELECT name, grade FROM students;",
-            "4": "SELECT * FROM students ORDER BY age ASC LIMIT 1;",
-            "5": "SELECT COUNT(*) FROM students;",
-            "6": "SELECT * FROM students ORDER BY age;",
-            "7": "SELECT * FROM students WHERE name LIKE 'A%';",
-            "8": "SELECT DISTINCT grade FROM students;",
-            "9": "SELECT * FROM students WHERE age >= 21;",
-            "10": "SELECT MAX(age) FROM students;",
-            "11": "SELECT * FROM students WHERE grade IN ('B', 'C');"
-        };
+    // Initialize Ace Editor for SQL syntax highlighting.
+    let editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/sql");
+    editor.setOptions({
+      enableBasicAutocompletion: true,
+      enableLiveAutocompletion: true
+    });
 
-        document.getElementById("questionDisplay").innerText = "Question: " + questions[currentQuestion];
+    // Ensure the editor resizes after user finishes resizing the container.
+    document.getElementById("editor").addEventListener('mouseup', function() {
+      editor.resize();
+    });
 
-        async function initDB() {
-            const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
-            db = new SQL.Database();
-            db.run("CREATE TABLE students (id INTEGER, name TEXT, age INTEGER, grade TEXT);");
-            db.run("INSERT INTO students VALUES (1, 'Alice', 20, 'A'), (2, 'Bob', 21, 'B'), (3, 'Charlie', 22, 'C');");
+    async function initDB() {
+      const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
+      db = new SQL.Database();
+      db.run("CREATE TABLE students (id INTEGER, name TEXT, age INTEGER, grade TEXT);");
+
+      // Generate a random number of rows (between 5 and 10)
+      let numRows = Math.floor(Math.random() * 6) + 5;
+      for (let i = 1; i <= numRows; i++) {
+        let name = names[Math.floor(Math.random() * names.length)];
+        let age = Math.floor(Math.random() * 10) + 18;  // age between 18 and 27
+        let grade = grades[Math.floor(Math.random() * grades.length)];
+        db.run(`INSERT INTO students VALUES (${i}, '${name}', ${age}, '${grade}');`);
+      }
+
+      displayTable();
+      generateRandomQuery();
+    }
+
+    // Display the table from the DB in the #tableDisplay element.
+    function displayTable() {
+      let result = db.exec("SELECT * FROM students;");
+      let tableDiv = document.getElementById("tableDisplay");
+      tableDiv.innerHTML = "";
+      if (!result || result.length === 0) {
+        tableDiv.innerHTML = "<p>No data available.</p>";
+        return;
+      }
+      let tableElem = document.createElement("table");
+      let thead = document.createElement("thead");
+      let headerRow = document.createElement("tr");
+      result[0].columns.forEach(col => {
+        let th = document.createElement("th");
+        th.innerText = col;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      tableElem.appendChild(thead);
+
+      let tbody = document.createElement("tbody");
+      result[0].values.forEach(row => {
+        let tr = document.createElement("tr");
+        row.forEach(cell => {
+          let td = document.createElement("td");
+          td.innerText = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      tableElem.appendChild(tbody);
+      tableDiv.appendChild(tableElem);
+    }
+
+    // Randomly generate a query and its human-readable description.
+    function generateRandomQuery() {
+      // Now we have 10 query types.
+      let queryType = Math.floor(Math.random() * 10) + 1;
+
+      switch(queryType) {
+        case 1: {
+          let randomGrade = grades[Math.floor(Math.random() * grades.length)];
+          currentQuery = `SELECT * FROM students WHERE grade = '${randomGrade}';`;
+          currentQuestionText = `Select all students with grade '${randomGrade}'.`;
+          break;
+        }
+        case 2: {
+          let randomAge = Math.floor(Math.random() * 10) + 18;
+          currentQuery = `SELECT * FROM students WHERE age > ${randomAge};`;
+          currentQuestionText = `Select students older than ${randomAge}.`;
+          break;
+        }
+        case 3: {
+          currentQuery = `SELECT name, grade FROM students;`;
+          currentQuestionText = `Get student names and grades.`;
+          break;
+        }
+        case 4: {
+          currentQuery = `SELECT * FROM students ORDER BY age ASC LIMIT 1;`;
+          currentQuestionText = `Find the youngest student.`;
+          break;
+        }
+        case 5: {
+          currentQuery = `SELECT COUNT(*) FROM students;`;
+          currentQuestionText = `Count the number of students.`;
+          break;
+        }
+        case 6: {
+          let randomLetter = names[Math.floor(Math.random() * names.length)].charAt(0);
+          currentQuery = `SELECT * FROM students WHERE name LIKE '${randomLetter}%';`;
+          currentQuestionText = `Select all students whose name starts with '${randomLetter}'.`;
+          break;
+        }
+        case 7: {
+          let randomAge = Math.floor(Math.random() * 10) + 18;
+          currentQuery = `SELECT * FROM students WHERE age < ${randomAge};`;
+          currentQuestionText = `Select students younger than ${randomAge}.`;
+          break;
+        }
+        case 8: {
+          currentQuery = `SELECT DISTINCT grade FROM students;`;
+          currentQuestionText = `Get distinct grades.`;
+          break;
+        }
+        case 9: {
+          currentQuery = `SELECT AVG(age) FROM students;`;
+          currentQuestionText = `Get the average age of students.`;
+          break;
+        }
+        case 10: {
+          currentQuery = `SELECT name FROM students ORDER BY name ASC;`;
+          currentQuestionText = `Get student names in alphabetical order.`;
+          break;
+        }
+        default:
+          currentQuery = `SELECT * FROM students;`;
+          currentQuestionText = `Select all students.`;
+      }
+
+      document.getElementById("questionDisplay").innerText = "Question: " + currentQuestionText;
+      console.log("Generated Query:", currentQuery);
+    }
+
+    async function runQuery() {
+      let userQuery = editor.getValue().trim();
+
+      try {
+        let userResult = db.exec(userQuery);
+        let correctResult = db.exec(currentQuery);
+
+        if (userResult.length > 0 && JSON.stringify(userResult) === JSON.stringify(correctResult)) {
+          document.getElementById("feedback").innerHTML = "Correct! ✅ Moving to next question...";
+          document.getElementById("feedback").className = "correct";
+          document.getElementById("lastIncorrectQuery").innerText = "";
+
+          correctCount++;
+          document.getElementById("correctCount").innerText = correctCount;
+          localStorage.setItem("correctCount", correctCount);
+
+          generateRandomQuery();
+          editor.setValue("");
+        } else {
+          document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
+          document.getElementById("feedback").className = "incorrect";
+          document.getElementById("lastIncorrectQuery").innerText = "Last Incorrect Query: " + userQuery;
         }
 
-        async function runQuery() {
-            let userQuery = document.getElementById("queryInput").value.trim();
-            let selectedQuestion = currentQuestion;
-            let correctQuery = correctQueries[selectedQuestion].trim();
+        displayResults(userResult);
+      } catch (error) {
+        document.getElementById("feedback").innerHTML = "Error in SQL syntax! ❌";
+        document.getElementById("feedback").className = "incorrect";
+        document.getElementById("lastIncorrectQuery").innerText = "Last Incorrect Query: " + userQuery;
+        document.getElementById("outputTable").innerHTML = "";
+      }
+    }
 
-            try {
-                let userResult = db.exec(userQuery);
-                let correctResult = db.exec(correctQuery);
+    function displayResults(result) {
+      let table = document.getElementById("outputTable");
+      table.innerHTML = "";
 
-                if (userResult.length > 0 && JSON.stringify(userResult) === JSON.stringify(correctResult)) {
-                    document.getElementById("feedback").innerHTML = "Correct! ✅ Moving to next question...";
-                    document.getElementById("feedback").className = "correct";
+      if (!result || result.length === 0 || !result[0].columns || result[0].values.length === 0) {
+        table.innerHTML = "<tr><td>No results found.</td></tr>";
+        return;
+      }
 
-                    correctCount++;
-                    document.getElementById("correctCount").innerText = correctCount;
-                    localStorage.setItem("correctCount", correctCount);
+      let columns = result[0].columns;
+      let values = result[0].values;
 
-                    // Move to next question
-                    currentQuestion++;
-                    if (currentQuestion > Object.keys(correctQueries).length) {
-                        currentQuestion = 1; // Restart if they finish all
-                    }
+      let thead = document.createElement("thead");
+      let headerRow = document.createElement("tr");
+      columns.forEach(col => {
+        let th = document.createElement("th");
+        th.innerText = col;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
 
-                    localStorage.setItem("currentQuestion", currentQuestion);
-                    document.getElementById("questionDisplay").innerText = "Question: " + questions[currentQuestion];
-                    document.getElementById("queryInput").value = "";
-                } else {
-                    document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
-                    document.getElementById("feedback").className = "incorrect";
-                }
+      let tbody = document.createElement("tbody");
+      values.forEach(row => {
+        let tr = document.createElement("tr");
+        row.forEach(cell => {
+          let td = document.createElement("td");
+          td.innerText = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
 
-                displayResults(userResult);
-
-            } catch (error) {
-                document.getElementById("feedback").innerHTML = "Error in SQL syntax! ❌";
-                document.getElementById("feedback").className = "incorrect";
-                document.getElementById("outputTable").innerHTML = "";
-            }
-        }
-
-        function displayResults(result) {
-            let table = document.getElementById("outputTable");
-            table.innerHTML = "";
-
-            if (!result || result.length === 0 || !result[0].columns || result[0].values.length === 0) {
-                table.innerHTML = "<tr><td>No results found.</td></tr>";
-                return;
-            }
-
-            let columns = result[0].columns;
-            let values = result[0].values;
-
-            let thead = document.createElement("thead");
-            let headerRow = document.createElement("tr");
-            columns.forEach(col => {
-                let th = document.createElement("th");
-                th.innerText = col;
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            let tbody = document.createElement("tbody");
-            values.forEach(row => {
-                let tr = document.createElement("tr");
-                row.forEach(cell => {
-                    let td = document.createElement("td");
-                    td.innerText = cell;
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-        }
-
-        initDB();
-    </script>
+    initDB();
+  </script>
 </body>
 </html>
