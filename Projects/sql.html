@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Checker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #121212;
+            color: #ffffff;
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        th, td {
+            border: 1px solid #ffffff;
+            padding: 8px;
+            text-align: left;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-top: 10px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #3700b3;
+        }
+        .correct { color: #00c853; font-weight: bold; }
+        .incorrect { color: #ff5252; font-weight: bold; }
+        #outputTable {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #outputTable th, #outputTable td {
+            border: 1px solid white;
+            padding: 8px;
+            text-align: left;
+        }
+        select {
+            background-color: #1e1e1e;
+            color: white;
+            border: 1px solid #ffffff;
+            padding: 5px;
+        }
+        #scoreBoard {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h2>SQL Query Checker</h2>
+    <p><strong>Table: students</strong></p>
+    <table>
+        <tr><th>ID</th><th>Name</th><th>Age</th><th>Grade</th></tr>
+        <tr><td>1</td><td>Alice</td><td>20</td><td>A</td></tr>
+        <tr><td>2</td><td>Bob</td><td>21</td><td>B</td></tr>
+        <tr><td>3</td><td>Charlie</td><td>22</td><td>C</td></tr>
+    </table>
+
+    <p>Write a query to select all students with grade 'A'.</p>
+    <select id="questionSelect" onchange="updateQuestion()">
+        <option value="1">Select all students with grade 'A'</option>
+        <option value="2">Select students older than 20</option>
+        <option value="3">Get student names and grades</option>
+        <option value="4">Find the youngest student</option>
+        <option value="5">Count the number of students</option>
+        <option value="6">Get students ordered by age</option>
+        <option value="7">Find students whose name starts with 'A'</option>
+        <option value="8">Get distinct grades</option>
+        <option value="9">Find students with an age of 21 or more</option>
+        <option value="10">Select the highest age</option>
+        <option value="11">Find students with grade 'B' or 'C'</option>
+    </select>
+
+    <textarea id="queryInput" placeholder="Enter your SQL query here..."></textarea>
+    <button onclick="runQuery()">Run Query</button>
+    <p id="feedback"></p>
+    <table id="outputTable"></table>
+    <p id="scoreBoard">Correct Queries: <span id="correctCount">0</span></p>
+
+    <script>
+        let db;
+        let correctCount = 0;
+
+        async function initDB() {
+            const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
+            db = new SQL.Database();
+            db.run("CREATE TABLE students (id INTEGER, name TEXT, age INTEGER, grade TEXT);");
+            db.run("INSERT INTO students VALUES (1, 'Alice', 20, 'A'), (2, 'Bob', 21, 'B'), (3, 'Charlie', 22, 'C');");
+        }
+
+        function updateQuestion() {
+            document.getElementById("queryInput").value = "";
+            document.getElementById("feedback").innerHTML = "";
+            document.getElementById("outputTable").innerHTML = "";
+        }
+
+        async function runQuery() {
+            let userQuery = document.getElementById("queryInput").value;
+            let selectedQuestion = document.getElementById("questionSelect").value;
+            let correctQuery = "SELECT * FROM students WHERE grade = 'A';";
+
+            try {
+                let result = db.exec(userQuery);
+                let correctResult = db.exec(correctQuery);
+                if (JSON.stringify(result) === JSON.stringify(correctResult)) {
+                    document.getElementById("feedback").innerHTML = "Correct! ✅";
+                    document.getElementById("feedback").className = "correct";
+                    correctCount++;
+                    document.getElementById("correctCount").innerText = correctCount;
+                } else {
+                    document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
+                    document.getElementById("feedback").className = "incorrect";
+                }
+            } catch (error) {
+                document.getElementById("feedback").innerHTML = "Error in SQL syntax! ❌";
+                document.getElementById("feedback").className = "incorrect";
+            }
+        }
+
+        initDB();
+    </script>
+</body>
+</html>
