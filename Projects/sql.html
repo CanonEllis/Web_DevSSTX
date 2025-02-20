@@ -47,16 +47,6 @@
         }
         .correct { color: #00c853; font-weight: bold; }
         .incorrect { color: #ff5252; font-weight: bold; }
-        #outputTable {
-            margin-top: 20px;
-            border-collapse: collapse;
-            width: 100%;
-        }
-        #outputTable th, #outputTable td {
-            border: 1px solid white;
-            padding: 8px;
-            text-align: left;
-        }
         select {
             background-color: #1e1e1e;
             color: white;
@@ -66,6 +56,16 @@
         #scoreBoard {
             margin-top: 20px;
             font-size: 18px;
+        }
+        #outputTable {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #outputTable th, #outputTable td {
+            border: 1px solid white;
+            padding: 8px;
+            text-align: left;
         }
     </style>
 </head>
@@ -80,8 +80,8 @@
     </table>
 
     <p></p>
-    
-    <select id="questionSelect" onchange="updateQuestion()">
+
+    <select id="questionSelect">
         <option value="1">Select all students with grade 'A'</option>
         <option value="2">Select students older than 20</option>
         <option value="3">Get student names and grades</option>
@@ -103,7 +103,9 @@
 
     <script>
         let db;
-        let correctCount = 0;
+        let correctCount = parseInt(localStorage.getItem("correctCount")) || 0;
+        document.getElementById("correctCount").innerText = correctCount;
+
         let correctQueries = {
             "1": "SELECT * FROM students WHERE grade = 'A';",
             "2": "SELECT * FROM students WHERE age > 20;",
@@ -126,27 +128,67 @@
         }
 
         async function runQuery() {
-            let userQuery = document.getElementById("queryInput").value;
+            let userQuery = document.getElementById("queryInput").value.trim();
             let selectedQuestion = document.getElementById("questionSelect").value;
-            let correctQuery = correctQueries[selectedQuestion];
+            let correctQuery = correctQueries[selectedQuestion].trim();
 
             try {
-                let result = db.exec(userQuery);
+                let userResult = db.exec(userQuery);
                 let correctResult = db.exec(correctQuery);
 
-                if (JSON.stringify(result) === JSON.stringify(correctResult)) {
+                if (userResult.length > 0 && JSON.stringify(userResult) === JSON.stringify(correctResult)) {
                     document.getElementById("feedback").innerHTML = "Correct! ✅";
                     document.getElementById("feedback").className = "correct";
                     correctCount++;
                     document.getElementById("correctCount").innerText = correctCount;
+                    localStorage.setItem("correctCount", correctCount);
                 } else {
                     document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
                     document.getElementById("feedback").className = "incorrect";
                 }
+
+                displayResults(userResult);
+
             } catch (error) {
                 document.getElementById("feedback").innerHTML = "Error in SQL syntax! ❌";
                 document.getElementById("feedback").className = "incorrect";
+                document.getElementById("outputTable").innerHTML = "";
             }
+        }
+
+        function displayResults(result) {
+            let table = document.getElementById("outputTable");
+            table.innerHTML = "";
+
+            if (!result || result.length === 0 || !result[0].columns || result[0].values.length === 0) {
+                table.innerHTML = "<tr><td>No results found.</td></tr>";
+                return;
+            }
+
+            let columns = result[0].columns;
+            let values = result[0].values;
+
+            let thead = document.createElement("thead");
+            let headerRow = document.createElement("tr");
+            columns.forEach(col => {
+                let th = document.createElement("th");
+                th.innerText = col;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            let tbody = document.createElement("tbody");
+            values.forEach(row => {
+                let tr = document.createElement("tr");
+                row.forEach(cell => {
+                    let td = document.createElement("td");
+                    td.innerText = cell;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
         }
 
         initDB();
