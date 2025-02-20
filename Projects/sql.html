@@ -47,12 +47,6 @@
         }
         .correct { color: #00c853; font-weight: bold; }
         .incorrect { color: #ff5252; font-weight: bold; }
-        select {
-            background-color: #1e1e1e;
-            color: white;
-            border: 1px solid #ffffff;
-            padding: 5px;
-        }
         #scoreBoard {
             margin-top: 20px;
             font-size: 18px;
@@ -67,6 +61,12 @@
             padding: 8px;
             text-align: left;
         }
+        #questionDisplay {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -79,21 +79,7 @@
         <tr><td>3</td><td>Charlie</td><td>22</td><td>C</td></tr>
     </table>
 
-    <p></p>
-
-    <select id="questionSelect" disabled>
-        <option value="1">Select all students with grade 'A'</option>
-        <option value="2">Select students older than 20</option>
-        <option value="3">Get student names and grades</option>
-        <option value="4">Find the youngest student</option>
-        <option value="5">Count the number of students</option>
-        <option value="6">Get students ordered by age</option>
-        <option value="7">Find students whose name starts with 'A'</option>
-        <option value="8">Get distinct grades</option>
-        <option value="9">Find students with an age of 21 or more</option>
-        <option value="10">Select the highest age</option>
-        <option value="11">Find students with grade 'B' or 'C'</option>
-    </select>
+    <p id="questionDisplay"></p>
 
     <textarea id="queryInput" placeholder="Enter your SQL query here..."></textarea>
     <button onclick="runQuery()">Run Query</button>
@@ -107,8 +93,20 @@
         let currentQuestion = parseInt(localStorage.getItem("currentQuestion")) || 1;
 
         document.getElementById("correctCount").innerText = correctCount;
-        document.getElementById("questionSelect").value = currentQuestion;
-        document.getElementById("questionSelect").disabled = true;
+
+        let questions = {
+            "1": "Select all students with grade 'A'",
+            "2": "Select students older than 20",
+            "3": "Get student names and grades",
+            "4": "Find the youngest student",
+            "5": "Count the number of students",
+            "6": "Get students ordered by age",
+            "7": "Find students whose name starts with 'A'",
+            "8": "Get distinct grades",
+            "9": "Find students with an age of 21 or more",
+            "10": "Select the highest age",
+            "11": "Find students with grade 'B' or 'C'"
+        };
 
         let correctQueries = {
             "1": "SELECT * FROM students WHERE grade = 'A';",
@@ -123,6 +121,8 @@
             "10": "SELECT MAX(age) FROM students;",
             "11": "SELECT * FROM students WHERE grade IN ('B', 'C');"
         };
+
+        document.getElementById("questionDisplay").innerText = "Question: " + questions[currentQuestion];
 
         async function initDB() {
             const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
@@ -155,8 +155,7 @@
                     }
 
                     localStorage.setItem("currentQuestion", currentQuestion);
-                    document.getElementById("questionSelect").value = currentQuestion;
-                    document.getElementById("questionSelect").disabled = true;
+                    document.getElementById("questionDisplay").innerText = "Question: " + questions[currentQuestion];
                     document.getElementById("queryInput").value = "";
                 } else {
                     document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
