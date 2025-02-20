@@ -79,6 +79,8 @@
         <tr><td>3</td><td>Charlie</td><td>22</td><td>C</td></tr>
     </table>
 
+    <p></p>
+    
     <select id="questionSelect" onchange="updateQuestion()">
         <option value="1">Select all students with grade 'A'</option>
         <option value="2">Select students older than 20</option>
@@ -102,6 +104,19 @@
     <script>
         let db;
         let correctCount = 0;
+        let correctQueries = {
+            "1": "SELECT * FROM students WHERE grade = 'A';",
+            "2": "SELECT * FROM students WHERE age > 20;",
+            "3": "SELECT name, grade FROM students;",
+            "4": "SELECT * FROM students ORDER BY age ASC LIMIT 1;",
+            "5": "SELECT COUNT(*) FROM students;",
+            "6": "SELECT * FROM students ORDER BY age;",
+            "7": "SELECT * FROM students WHERE name LIKE 'A%';",
+            "8": "SELECT DISTINCT grade FROM students;",
+            "9": "SELECT * FROM students WHERE age >= 21;",
+            "10": "SELECT MAX(age) FROM students;",
+            "11": "SELECT * FROM students WHERE grade IN ('B', 'C');"
+        };
 
         async function initDB() {
             const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
@@ -110,37 +125,23 @@
             db.run("INSERT INTO students VALUES (1, 'Alice', 20, 'A'), (2, 'Bob', 21, 'B'), (3, 'Charlie', 22, 'C');");
         }
 
-        function updateQuestion() {
-            document.getElementById("queryInput").value = "";
-            document.getElementById("feedback").innerHTML = "";
-            document.getElementById("outputTable").innerHTML = "";
-        }
-
         async function runQuery() {
             let userQuery = document.getElementById("queryInput").value;
+            let selectedQuestion = document.getElementById("questionSelect").value;
+            let correctQuery = correctQueries[selectedQuestion];
+
             try {
                 let result = db.exec(userQuery);
-                let outputTable = document.getElementById("outputTable");
-                outputTable.innerHTML = "";
-                if (result.length > 0) {
-                    let columns = result[0].columns;
-                    let values = result[0].values;
-                    let headerRow = document.createElement("tr");
-                    columns.forEach(col => {
-                        let th = document.createElement("th");
-                        th.innerText = col;
-                        headerRow.appendChild(th);
-                    });
-                    outputTable.appendChild(headerRow);
-                    values.forEach(row => {
-                        let tr = document.createElement("tr");
-                        row.forEach(value => {
-                            let td = document.createElement("td");
-                            td.innerText = value;
-                            tr.appendChild(td);
-                        });
-                        outputTable.appendChild(tr);
-                    });
+                let correctResult = db.exec(correctQuery);
+
+                if (JSON.stringify(result) === JSON.stringify(correctResult)) {
+                    document.getElementById("feedback").innerHTML = "Correct! ✅";
+                    document.getElementById("feedback").className = "correct";
+                    correctCount++;
+                    document.getElementById("correctCount").innerText = correctCount;
+                } else {
+                    document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
+                    document.getElementById("feedback").className = "incorrect";
                 }
             } catch (error) {
                 document.getElementById("feedback").innerHTML = "Error in SQL syntax! ❌";
