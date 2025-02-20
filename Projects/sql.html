@@ -79,7 +79,6 @@
         <tr><td>3</td><td>Charlie</td><td>22</td><td>C</td></tr>
     </table>
 
-    <p>Write a query to select all students with grade 'A'.</p>
     <select id="questionSelect" onchange="updateQuestion()">
         <option value="1">Select all students with grade 'A'</option>
         <option value="2">Select students older than 20</option>
@@ -119,20 +118,29 @@
 
         async function runQuery() {
             let userQuery = document.getElementById("queryInput").value;
-            let selectedQuestion = document.getElementById("questionSelect").value;
-            let correctQuery = "SELECT * FROM students WHERE grade = 'A';";
-
             try {
                 let result = db.exec(userQuery);
-                let correctResult = db.exec(correctQuery);
-                if (JSON.stringify(result) === JSON.stringify(correctResult)) {
-                    document.getElementById("feedback").innerHTML = "Correct! ✅";
-                    document.getElementById("feedback").className = "correct";
-                    correctCount++;
-                    document.getElementById("correctCount").innerText = correctCount;
-                } else {
-                    document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
-                    document.getElementById("feedback").className = "incorrect";
+                let outputTable = document.getElementById("outputTable");
+                outputTable.innerHTML = "";
+                if (result.length > 0) {
+                    let columns = result[0].columns;
+                    let values = result[0].values;
+                    let headerRow = document.createElement("tr");
+                    columns.forEach(col => {
+                        let th = document.createElement("th");
+                        th.innerText = col;
+                        headerRow.appendChild(th);
+                    });
+                    outputTable.appendChild(headerRow);
+                    values.forEach(row => {
+                        let tr = document.createElement("tr");
+                        row.forEach(value => {
+                            let td = document.createElement("td");
+                            td.innerText = value;
+                            tr.appendChild(td);
+                        });
+                        outputTable.appendChild(tr);
+                    });
                 }
             } catch (error) {
                 document.getElementById("feedback").innerHTML = "Error in SQL syntax! ❌";
