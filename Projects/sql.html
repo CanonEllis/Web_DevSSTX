@@ -552,11 +552,12 @@
     async function nextQuestion() {
       // Hide the Next Question button
       document.getElementById("nextQuestionButton").style.display = "none";
-      // Optionally, clear feedback and editor.
+      // Clear feedback, editor, and the output table
       document.getElementById("feedback").innerHTML = "";
       document.getElementById("lastIncorrectQuery").innerText = "";
       editor.setValue("");
-      // Randomly select a new table template and reinitialize the database.
+      document.getElementById("outputTable").innerHTML = "";
+      // Randomly select a new table template and reinitialize the DB.
       selectRandomTemplate();
       await initDB();
     }
