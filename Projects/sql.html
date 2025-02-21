@@ -111,13 +111,36 @@
       font-size: 18px;
       text-align: center;
     }
+    /* For join templates, display each table separately */
+    .subtable {
+      margin-bottom: 20px;
+    }
+    .subtable h3 {
+      margin: 10px 0 5px;
+    }
+    /* Next Question button styling */
+    #nextQuestionButton {
+      background-color: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: none;
+    }
+    #nextQuestionButton:hover {
+      background-color: var(--accent-hover);
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>SQL</h2>
+    <h2>SQL Practice</h2>
     <p><strong>Table: <span id="tableNameDisplay"></span></strong></p>
-    <!-- Display the randomly generated table -->
+    <!-- Display the randomly generated table(s) -->
     <div id="tableDisplay"></div>
 
     <!-- Current question display -->
@@ -126,6 +149,7 @@
     <!-- Ace Editor container replaces the textarea -->
     <div id="editor" placeholder="Enter your SQL query here..."></div>
     <button onclick="runQuery()">Run Query</button>
+    <button id="nextQuestionButton" onclick="nextQuestion()">Next Question</button>
     <p id="feedback"></p>
     <p id="lastIncorrectQuery"></p>
     <table id="outputTable"></table>
@@ -142,24 +166,23 @@
     let currentQuestionText = "";
     let currentTableTemplate;
 
-    // Data arrays for random generation.
-    const names = ["Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Helen", "Isabella", "Jack", "Katherine", "Liam", "Mia", "Noam", "Oliver", "Pamela", "Quinn", "Ryan", "Sophia",
-     "Thomas", "Uma", "Victor", "William", "Xander", "Yara", "Zach", "Roman"];
-;
+    // Expanded names list.
+    const names = ["Alice", "Bob", "Charlie", "David", "Eva", "Frank", "Grace", "Helen", "Isabella", "Jack", "Katherine", "Liam", "Mia", "Noam", "Oliver", "Pamela", "Quinn", "Ryan", "Sophia", "Thomas", "Uma", "Victor", "William", "Xander", "Yara", "Zach", "Roman"];
+
+    // For join template, list of course names.
+    const courseNames = ["Math", "English", "History", "Science", "Art", "Music", "PE", "Computer Science"];
 
     // Define table templates.
     const tableTemplates = [
       {
         name: "students",
         columns: ["id", "name", "age", "grade"],
-        // Data generator for each row.
         dataGenerator: function(id) {
           let name = names[Math.floor(Math.random() * names.length)];
-          let age = Math.floor(Math.random() * 10) + 18; // age between 18 and 27
-          let grade = ["H","V","G","P","X"][Math.floor(Math.random()*5)];
+          let age = Math.floor(Math.random() * 10) + 18;
+          let grade = ["H", "V", "G", "P", "X"][Math.floor(Math.random()*5)];
           return [id, name, age, grade];
         },
-        // Query generators return an object {query, description}.
         queryGenerators: {
           type1: function() {
             let randomGrade = ["A","B","C","D","F"][Math.floor(Math.random()*5)];
@@ -233,7 +256,7 @@
         dataGenerator: function(id) {
           let name = names[Math.floor(Math.random() * names.length)];
           let age = Math.floor(Math.random() * 10) + 18;
-          let salary = Math.floor(Math.random() * 70000) + 30000; // between 30000 and 100000
+          let salary = Math.floor(Math.random() * 70000) + 30000;
           return [id, name, age, salary];
         },
         queryGenerators: {
@@ -302,12 +325,58 @@
             };
           }
         }
+      },
+      {
+        name: "students_courses",
+        // This template uses two tables.
+        tables: [
+          {
+            name: "students",
+            columns: ["id", "name", "age"],
+            dataGenerator: function(id) {
+              let name = names[Math.floor(Math.random() * names.length)];
+              let age = Math.floor(Math.random() * 10) + 18;
+              return [id, name, age];
+            }
+          },
+          {
+            name: "courses",
+            columns: ["student_id", "course", "score"]
+            // Data for courses will be generated after students are inserted.
+          }
+        ],
+        queryGenerators: {
+          type1: function() {
+            let threshold = Math.floor(Math.random()*50) + 50;
+            return {
+              query: `SELECT s.name, c.course FROM students s JOIN courses c ON s.id = c.student_id WHERE c.score > ${threshold};`,
+              description: `Select student names and course names for students with a score greater than ${threshold}.`
+            };
+          },
+          type2: function() {
+            return {
+              query: `SELECT s.name, c.course, c.score FROM students s JOIN courses c ON s.id = c.student_id ORDER BY c.score DESC;`,
+              description: `Get student names, course names, and scores in descending order of score.`
+            };
+          },
+          type3: function() {
+            return {
+              query: `SELECT s.name, c.course FROM students s LEFT JOIN courses c ON s.id = c.student_id;`,
+              description: `Select all students and any courses they are enrolled in (include students without courses).`
+            };
+          }
+        }
       }
     ];
 
-    // Randomly choose a table template.
-    currentTableTemplate = tableTemplates[Math.floor(Math.random() * tableTemplates.length)];
-    document.getElementById("tableNameDisplay").innerText = currentTableTemplate.name;
+    // Function to randomly select a new table template.
+    function selectRandomTemplate() {
+      currentTableTemplate = tableTemplates[Math.floor(Math.random() * tableTemplates.length)];
+      document.getElementById("tableNameDisplay").innerText = currentTableTemplate.name;
+    }
+
+    // Initially choose a random template.
+    selectRandomTemplate();
 
     // Initialize Ace Editor for SQL syntax highlighting.
     let editor = ace.edit("editor");
@@ -324,59 +393,125 @@
     async function initDB() {
       const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
       db = new SQL.Database();
-      // Build CREATE TABLE query dynamically.
-      let cols = currentTableTemplate.columns.join(", ");
-      db.run(`CREATE TABLE ${currentTableTemplate.name} (${cols});`);
 
-      // Generate a random number of rows (between 5 and 10)
-      let numRows = Math.floor(Math.random() * 6) + 5;
-      for (let i = 1; i <= numRows; i++) {
-        let rowData = currentTableTemplate.dataGenerator(i);
-        // Build INSERT query. We'll use the values joined by comma.
-        let values = rowData.map(val => typeof val === "string" ? `'${val}'` : val).join(", ");
-        db.run(`INSERT INTO ${currentTableTemplate.name} VALUES (${values});`);
+      if (currentTableTemplate.tables) {
+        // For join template, create both tables.
+        currentTableTemplate.tables.forEach(table => {
+          let cols = table.columns.join(", ");
+          db.run(`CREATE TABLE ${table.name} (${cols});`);
+        });
+        // Generate students.
+        let numStudents = Math.floor(Math.random() * 6) + 5;
+        for (let i = 1; i <= numStudents; i++) {
+          let rowData = currentTableTemplate.tables[0].dataGenerator(i);
+          let values = rowData.map(val => typeof val === "string" ? `'${val}'` : val).join(", ");
+          db.run(`INSERT INTO students VALUES (${values});`);
+        }
+        // Retrieve student ids.
+        let res = db.exec("SELECT id FROM students;");
+        let studentIds = res[0].values.flat();
+        // Generate courses.
+        let numCourses = Math.floor(Math.random() * 11) + 5;
+        for (let i = 1; i <= numCourses; i++) {
+          let course = courseNames[Math.floor(Math.random() * courseNames.length)];
+          let score = Math.floor(Math.random() * 50) + 50;
+          let student_id = studentIds[Math.floor(Math.random() * studentIds.length)];
+          db.run(`INSERT INTO courses VALUES (${student_id}, '${course}', ${score});`);
+        }
+      } else {
+        // For single table templates.
+        let cols = currentTableTemplate.columns.join(", ");
+        db.run(`CREATE TABLE ${currentTableTemplate.name} (${cols});`);
+        let numRows = Math.floor(Math.random() * 6) + 5;
+        for (let i = 1; i <= numRows; i++) {
+          let rowData = currentTableTemplate.dataGenerator(i);
+          let values = rowData.map(val => typeof val === "string" ? `'${val}'` : val).join(", ");
+          db.run(`INSERT INTO ${currentTableTemplate.name} VALUES (${values});`);
+        }
       }
-
       displayTable();
       generateRandomQuery();
     }
 
-    // Display the table using the current table name.
+    // Display the table(s). For join templates, display each table separately.
     function displayTable() {
-      let result = db.exec(`SELECT * FROM ${currentTableTemplate.name};`);
       let tableDiv = document.getElementById("tableDisplay");
       tableDiv.innerHTML = "";
-      if (!result || result.length === 0) {
-        tableDiv.innerHTML = "<p>No data available.</p>";
-        return;
-      }
-      let tableElem = document.createElement("table");
-      let thead = document.createElement("thead");
-      let headerRow = document.createElement("tr");
-      result[0].columns.forEach(col => {
-        let th = document.createElement("th");
-        th.innerText = col;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      tableElem.appendChild(thead);
-      let tbody = document.createElement("tbody");
-      result[0].values.forEach(row => {
-        let tr = document.createElement("tr");
-        row.forEach(cell => {
-          let td = document.createElement("td");
-          td.innerText = cell;
-          tr.appendChild(td);
+      if (currentTableTemplate.tables) {
+        currentTableTemplate.tables.forEach(tableTemplate => {
+          let result = db.exec(`SELECT * FROM ${tableTemplate.name};`);
+          let subDiv = document.createElement("div");
+          subDiv.classList.add("subtable");
+          let header = document.createElement("h3");
+          header.innerText = "Table: " + tableTemplate.name;
+          subDiv.appendChild(header);
+          if (!result || result.length === 0) {
+            subDiv.innerHTML += "<p>No data available.</p>";
+          } else {
+            let tableElem = document.createElement("table");
+            let thead = document.createElement("thead");
+            let headerRow = document.createElement("tr");
+            result[0].columns.forEach(col => {
+              let th = document.createElement("th");
+              th.innerText = col;
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            tableElem.appendChild(thead);
+            let tbody = document.createElement("tbody");
+            result[0].values.forEach(row => {
+              let tr = document.createElement("tr");
+              row.forEach(cell => {
+                let td = document.createElement("td");
+                td.innerText = cell;
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+            tableElem.appendChild(tbody);
+            subDiv.appendChild(tableElem);
+          }
+          tableDiv.appendChild(subDiv);
         });
-        tbody.appendChild(tr);
-      });
-      tableElem.appendChild(tbody);
-      tableDiv.appendChild(tableElem);
+      } else {
+        let result = db.exec(`SELECT * FROM ${currentTableTemplate.name};`);
+        if (!result || result.length === 0) {
+          tableDiv.innerHTML = "<p>No data available.</p>";
+          return;
+        }
+        let tableElem = document.createElement("table");
+        let thead = document.createElement("thead");
+        let headerRow = document.createElement("tr");
+        result[0].columns.forEach(col => {
+          let th = document.createElement("th");
+          th.innerText = col;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        tableElem.appendChild(thead);
+        let tbody = document.createElement("tbody");
+        result[0].values.forEach(row => {
+          let tr = document.createElement("tr");
+          row.forEach(cell => {
+            let td = document.createElement("td");
+            td.innerText = cell;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        tableElem.appendChild(tbody);
+        tableDiv.appendChild(tableElem);
+      }
     }
 
-    // Randomly generate a query from the current table template.
+    // Randomly generate a query using the current table template.
     function generateRandomQuery() {
-      let generatorKeys = Object.keys(currentTableTemplate.queryGenerators);
+      let generatorKeys;
+      if (currentTableTemplate.tables) {
+        generatorKeys = Object.keys(currentTableTemplate.queryGenerators);
+      } else {
+        generatorKeys = Object.keys(currentTableTemplate.queryGenerators);
+      }
       let randomKey = generatorKeys[Math.floor(Math.random() * generatorKeys.length)];
       let generated = currentTableTemplate.queryGenerators[randomKey]();
       currentQuery = generated.query;
@@ -391,14 +526,14 @@
         let userResult = db.exec(userQuery);
         let correctResult = db.exec(currentQuery);
         if (userResult.length > 0 && JSON.stringify(userResult) === JSON.stringify(correctResult)) {
-          document.getElementById("feedback").innerHTML = "Correct! ✅ Moving to next question...";
+          document.getElementById("feedback").innerHTML = "Correct! ✅";
           document.getElementById("feedback").className = "correct";
           document.getElementById("lastIncorrectQuery").innerText = "";
           correctCount++;
           document.getElementById("correctCount").innerText = correctCount;
           localStorage.setItem("correctCount", correctCount);
-          generateRandomQuery();
-          editor.setValue("");
+          // Show the Next Question button so the user can decide when to move on.
+          document.getElementById("nextQuestionButton").style.display = "block";
         } else {
           document.getElementById("feedback").innerHTML = "Incorrect ❌ Try again!";
           document.getElementById("feedback").className = "incorrect";
@@ -411,6 +546,19 @@
         document.getElementById("lastIncorrectQuery").innerText = "Last Incorrect Query: " + userQuery;
         document.getElementById("outputTable").innerHTML = "";
       }
+    }
+
+    // Function called when the user clicks "Next Question"
+    async function nextQuestion() {
+      // Hide the Next Question button
+      document.getElementById("nextQuestionButton").style.display = "none";
+      // Optionally, clear feedback and editor.
+      document.getElementById("feedback").innerHTML = "";
+      document.getElementById("lastIncorrectQuery").innerText = "";
+      editor.setValue("");
+      // Randomly select a new table template and reinitialize the database.
+      selectRandomTemplate();
+      await initDB();
     }
 
     function displayResults(result) {
